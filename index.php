@@ -153,7 +153,7 @@ if (!$query_kelas) {
                     <div class="tab-pane fade" id="tab-absensi" role="tabpanel">
                         <div class="text-center py-5">
                             <h3 class="text-muted">Fitur Absensi</h3>
-                            <p>Halaman ini sedang dalam tahap pengembangan.</p>
+                            <p>Belum jadi bang.</p>
                         </div>
                     </div>
 
