@@ -1,271 +1,192 @@
 <?php
-
 require_once 'config.php';
 
-$sql = 'SELECT a.*, k.nama_kelas FROM anggota as a
-        LEFT JOIN kelas as k ON a.id_kelas = k.id_kelas
-        GROUP BY a.id_anggota
-        ORDER BY a.id_anggota ASC';
-
-$query = mysqli_query($conn, $sql);
 $query_kelas = mysqli_query($conn, "SELECT * FROM kelas ORDER BY id_kelas ASC");
 
-if (!$query) {
+if (!$query_kelas) {
     die('SQL error: ' . mysqli_error($conn));
-};
-
+}
 ?>
 
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Peserta Globalin Academy</title>
-
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <script src="jquery-3.7.1.js"></script>
-
     <style>
-        h2 {
-            margin-top: 30px;
-            margin-bottom: 30px;
-            font-weight: bold;
+        body { background-color: #f8f9fa; }
+        .main-card { margin-top: -50px; border-radius: 15px; border: none; }
+        .header-section { 
+            background: linear-gradient(45deg, #007bff, #0056b3); 
+            padding: 80px 0 100px 0; 
+            color: white; 
         }
     </style>
 </head>
-
 <body>
-    <div class="container" id="eyyo">
-
-        <h2 class="text-center text-primary">DAFTAR ANGGOTA PHP</h2>
-
-        <div class="card shadow-sm">
-
-            <div class="card-header bg-white py-3">
-                <a id="tambah-baru-php" class="btn btn-primary">
-                + Tambah Data Baru
-                </a>
+    
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-
-            <div class="card-body">
-                <div class="table-responsive">
-                    
-                    <table class="table table-striped table-hover table-bordered align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th class="text-center">No.</th>
-                                <th class="text-center">ID Anggota</th>
-                                <th class="text-center">Nama</th>
-                                <th class="text-center">Alamat</th>
-                                <th class="text-center">Telpon</th>
-                                <th class="text-center">Email</th>
-                                <th class="text-center">Jenis Kelamin</th>
-                                <th class="text-center">Kelas</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center" width="150px">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            if (mysqli_num_rows($query) > 0) {
-                                $no = 1;
-                                while ($row = mysqli_fetch_assoc($query)){
-                            ?>
-                                <tr>
-                                    <td class="text-center"><?php echo $no++; ?></td>
-                                    <td class="text-center"><?php echo htmlspecialchars($row['id_anggota']); ?></td>
-                                    <td class="fw-bold"><?php echo htmlspecialchars($row['nama']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['alamat']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['telpon']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['email']); ?></td>
-                                    <td class="text-center"><?php echo htmlspecialchars($row['jenis_kelamin']); ?></td>
-                                    <td class="text-center">
-                                        <?php if ($row['nama_kelas']): ?>
-                                            <span class="badge bg-primary"><?php echo htmlspecialchars($row['nama_kelas']); ?></span>
-                                        <?php else: ?>
-                                            <span class="text-muted">-</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-center">
-                                        <?php if($row['status'] == 'Aktif'): ?>
-                                            <span class="badge bg-success">Aktif</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary">Tidak Aktif</span>
-                                        <?php endif; ?>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <a href="edit_data.php?id=<?php echo $row['id_anggota'];?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <button type="button" 
-                                            class="btn btn-danger btn-sm" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modalHapus" 
-                                            data-id="<?php echo $row['id_anggota'];?>" 
-                                            data-nama="<?php echo $row['nama'];?>">
-                                        Hapus
-                                    </button>
-                                    </td>
-                                </tr>
-                            <?php
-                                }
-                            } else {
-                            ?>
-                                <tr>
-                                    <td colspan="10" class="text-center p-5">
-                                        Data Masih Kosong
-                                    </td>
-                                </tr>
-                            <?php }; ?>
-                        </tbody>
-                    </table>
-
-                </div>
-            </div>
-
         </div>
-        <br><br>
-
-        <button class="btn btn-primary" id="js">Belajar javaaaaskrraak</button>
-        <br><br><br>
     </div>
 
-    <div class="container" id="heheyy">
-        <h2 class="text-center text-primary">Anggota javaaaaskrraak</h2>
-        
-        <div class="card-header bg-white py-3">
-            <a id="tambah-baru-js" class="btn btn-primary">
-                + Tambah Data Baru
-            </a>
-        </div>
-
-        <div class="mb-5" id="tampil-data"></div>
-
-        <button class="btn btn-success" id="tanah">Kembali ke tanah</button>
+    <div class="header-section text-center">
+        <img src="Screenshot (33).png" alt="Logo" width="30%">
         <br><br>
-        
+        <h1 class="fw-bold">GLOBALIN ACADEMY</h1>
+        <p>Anggota & Absensi</p>
     </div>
 
-    <div class="container" id="fuyyoo">
-        
-        <div class="card shadow-sm mx-auto" style="max-width: 600px;">
-            
-            <div class="card-header bg-white text-center py-3">
-                <h4 class="mb-0 fw-bold text-primary">Formulir Tambah Peserta</h4>
+    <div class="container mb-5">
+        <div class="card main-card shadow-lg">
+            <div class="card-header bg-white pt-3 px-4">
+                <ul class="nav nav-tabs card-header-tabs" id="mainTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold" id="anggota-tab" data-bs-toggle="tab" data-bs-target="#tab-anggota" type="button">
+                            Daftar Anggota
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold" id="tambah-anggota-tab" data-bs-toggle="tab" data-bs-target="#tab-tambah-anggota" type="button">
+                            Tambah Anggota Baru
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold" id="absensi-tab" data-bs-toggle="tab" data-bs-target="#tab-absensi" type="button">
+                            Absensi
+                        </button>
+                    </li>
+                </ul>
             </div>
 
             <div class="card-body p-4">
-                
-                <form action="" method="POST">
+                <div class="tab-content" id="mainTabContent">
                     
-                    <div class="mb-3"> <label for="nama" class="form-label fw-bold">Nama Lengkap</label>
-                        <input type="text" class="form-control" name="nama" placeholder="Masukan nama lengkap..." required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="alamat" class="form-label fw-bold">Alamat Domisili</label>
-                        <textarea class="form-control" name="alamat" rows="3" placeholder="Masukan alamat lengkap..." required></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="telpon" class="form-label fw-bold">Nomor Telepon</label>
-                        <input type="text" class="form-control" name="telpon" placeholder="Contoh: 0812xxxx">
-                        <div class="form-text text-muted">Gunakan angka saja.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="email" class="form-label fw-bold">Alamat Email</label>
-                        <input type="email" class="form-control" name="email" placeholder="nama@email.com">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Pilih Kelas</label>
-                        <select name="id_kelas" class="form-select" required>
-                            <option value="" disabled selected>-- Pilih Kelas --</option>
-                                <?php
-                                if (isset($query_kelas)) mysqli_data_seek($query_kelas, 0);
-                                while ($kelas = mysqli_fetch_assoc($query_kelas)):
-                                ?>
-                                <option value="<?php echo $kelas['id_kelas']; ?>"><?php echo $kelas['nama_kelas']; ?></option>
-                                <?php endwhile; ?>
-                        </select>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold d-block">Jenis Kelamin</label>
-                            
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="jenis_kelamin" id="pria" value="Pria" checked>
-                                <label class="form-check-label" for="pria">Pria</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="jenis_kelamin" id="wanita" value="Wanita">
-                                <label class="form-check-label" for="wanita">Wanita</label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold d-block">Status Keanggotaan</label>
-                            
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="status" id="aktif" value="Aktif" checked>
-                                <label class="form-check-label" for="aktif">Aktif</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="status" id="nonaktif" value="Tidak aktif">
-                                <label class="form-check-label" for="nonaktif">Tidak Aktif</label>
+                    <div class="tab-pane fade show active" id="tab-anggota" role="tabpanel">
+                        <div id="tampil-data">
+                            <div class="text-center p-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Memuat data...</p>
                             </div>
                         </div>
                     </div>
 
-                    <hr class="my-4">
-                        <div class="d-flex justify-content-end gap-2">
-                            <a id="batal-tambah-baru" class="btn btn-secondary">Batal</a>
-                            <button type="submit" name="simpan" class="btn btn-primary px-4">Simpan Data</button>
+                    <div class="tab-pane fade" id="tab-tambah-anggota" role="tabpanel">
+                        <div class="mx-auto" style="max-width: 700px;">
+                            <h4 class="mb-4 text-center">Formulir Pendaftaran</h4>
+                            <form id="form-tambah-anggota">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Nama Lengkap</label>
+                                        <input type="text" class="form-control" name="nama" required placeholder="Nama lengkap...">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Alamat Email</label>
+                                        <input type="email" class="form-control" name="email" placeholder="nama@email.com">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Alamat Domisili</label>
+                                    <textarea class="form-control" name="alamat" rows="2" required placeholder="Alamat lengkap..."></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Nomor Telepon</label>
+                                        <input type="text" class="form-control" name="telpon" placeholder="0812xxxx">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Pilih Kelas</label>
+                                        <select name="id_kelas" class="form-select" required>
+                                            <option value="" disabled selected>-- Pilih Kelas --</option>
+                                            <?php 
+                                            mysqli_data_seek($query_kelas, 0);
+                                            while ($kelas = mysqli_fetch_assoc($query_kelas)): ?>
+                                                <option value="<?= $kelas['id_kelas']; ?>"><?= $kelas['nama_kelas']; ?></option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold d-block">Jenis Kelamin</label>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="jenis_kelamin" value="Pria" checked>
+                                            <label class="form-check-label">Pria</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="jenis_kelamin" value="Wanita">
+                                            <label class="form-check-label">Wanita</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold d-block">Status</label>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="status" value="Aktif" checked>
+                                            <label class="form-check-label">Aktif</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="status" value="Tidak aktif">
+                                            <label class="form-check-label">Non-Aktif</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="reset" class="btn btn-light border">Reset</button>
+                                    <button type="submit" class="btn btn-primary px-4">Simpan Anggota</button>
+                                </div>
+                            </form>
                         </div>
+                    </div>
 
-                </form>
+                    <div class="tab-pane fade" id="tab-absensi" role="tabpanel">
+                        <div class="text-center py-5">
+                            <h3 class="text-muted">Fitur Absensi</h3>
+                            <p>Halaman ini sedang dalam tahap pengembangan.</p>
+                        </div>
+                    </div>
 
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         $(document).ready(function() {
-            $('#heheyy,#fuyyoo').hide();
-        });
-
-        $('#js').on('click', function() {
-            $('#eyyo').hide();
-            $('#heheyy').show(500);
             tampil_data();
-        });
 
-        $('#tanah').on('click', function() {
-            $('#eyyo').show(500);
-            $('#heheyy').hide();
-        });
+            $('#anggota-tab').on('click', function() {
+                tampil_data();
+            });
 
-        $('#tambah-baru-php').on('click', function() {
-            $('#fuyyoo').show(500);
+            $('#form-tambah-anggota').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: 'proses_simpan.php',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        if (response.trim() == "sukses") {
+                            showToast("Data anggota berhasil ditambahkan!", "bg-success");
+                            $('#form-tambah-anggota')[0].reset();
+                        } else {
+                            alert("Error: " + response);
+                        }
+                    }
+                });
+            });
         });
-
-        $('#tambah-baru-js').on('click', function() {
-            $('#fuyyoo').show(500);
-        });
-
-        $('#batal-tambah-baru').on('click', function() {
-            $('#fuyyoo').hide(500);
-        });
-
-        $('#simpan-data').on('click', function() {
-            $('#eyyo').hide();
-            $('#heheyy').show(500);
-            tampil_data();
-        });
-
 
         function tampil_data() {
             $.ajax({
@@ -274,10 +195,16 @@ if (!$query) {
                 success: function(data) {
                     $('#tampil-data').html(data);
                 }
-            })
+            });
+        }
+
+        function showToast(message, bgColor) {
+            $('#toastMessage').text(message);
+            $('#liveToast').removeClass('bg-success bg-danger').addClass(bgColor);
+            var toast = new bootstrap.Toast(document.getElementById('liveToast'));
+            toast.show();
         }
     </script>
-    
     <script src="js/bootstrap.bundle.min.js"></script>
-
 </body>
+</html>
