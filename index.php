@@ -172,17 +172,32 @@ if (!$query_kelas) {
 
             $('#form-tambah-anggota').on('submit', function(e) {
                 e.preventDefault();
+
+                var formData = {
+                    nama: $("input[name='nama']").val(),
+                    alamat: $("textarea[name='alamat']").val(),
+                    email: $("input[name='email']").val(),
+                    telpon: $("input[name='telpon']").val(),
+                    id_kelas: $("select[name='id_kelas']").val(),
+                    jenis_kelamin: $("input[name='jenis_kelamin']:checked").val(),
+                    status: $("input[name='status']:checked").val()
+                };
+
                 $.ajax({
-                    url: 'proses_simpan.php',
+                    url: 'saving_new_data.php',
                     type: 'POST',
-                    data: $(this).serialize(),
+                    contentType: 'application/json', 
+                    data: JSON.stringify(formData), 
                     success: function(response) {
-                        if (response.trim() == "sukses") {
-                            showToast("Data anggota berhasil ditambahkan!", "bg-success");
+                        if (response.status == "success") {
+                            showToast(response.message, "bg-success");
                             $('#form-tambah-anggota')[0].reset();
-                        } else {
-                            alert("Error: " + response);
+                            tampil_data();
                         }
+                    },
+                    error: function(xhr) {
+                        var err = JSON.parse(xhr.responseText);
+                        showToast("Error: " + err.message, "bg-danger");
                     }
                 });
             });
