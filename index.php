@@ -70,10 +70,35 @@ if (!$query_kelas) {
                 <div class="tab-content" id="mainTabContent">
                     
                     <div class="tab-pane fade show active" id="tab-anggota" role="tabpanel">
-                        <div id="tampil-data">
-                            <div class="text-center p-5">
-                                <div class="spinner-border text-primary" role="status"></div>
-                                <p class="mt-2">Memuat data...</p>
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    
+                                    <table class="table table-striped table-hover table-bordered align-middle">
+                                        <thead class="table-dark text-center">
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>ID Anggota</th>
+                                                <th>Nama</th>
+                                                <th>Alamat</th>
+                                                <th>Telpon</th>
+                                                <th>Email</th>
+                                                <th>Jenis Kelamin</th>
+                                                <th>Kelas</th>
+                                                <th>Status</th>
+                                                <th width="150px">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="isi-tabel-anggota">
+                                            </tbody>
+                                    </table>
+
+                                    <div id="loader" class="text-center d-none p-3">
+                                        <div class="spinner-border text-primary" role="status"></div>
+                                        <p class="mt-2">Memuat data...</p>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -163,11 +188,20 @@ if (!$query_kelas) {
     </div>
 
     <script>
-        $(document).ready(function() {
-            tampil_data();
+        let offset = 0;
+        const limit = 20;
+        let isLoading = false;
+        let isFull = false;
 
-            $('#anggota-tab').on('click', function() {
-                tampil_data();
+        $(document).ready(function() {
+            loadMoreData();
+
+            $(window).scroll(function() {
+                if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
+                    if (!isLoading && !isFull) {
+                        loadMoreData();
+                    }
+                }
             });
 
             $('#form-tambah-anggota').on('submit', function(e) {
@@ -192,7 +226,7 @@ if (!$query_kelas) {
                         if (response.status == "success") {
                             showToast(response.message, "bg-success");
                             $('#form-tambah-anggota')[0].reset();
-                            tampil_data();
+                            resetAndLoad();
                         }
                     },
                     error: function(xhr) {
@@ -201,14 +235,73 @@ if (!$query_kelas) {
                     }
                 });
             });
+
+            $('#anggota-tab').on('click', function() {
+                resetAndReload();
+            });
         });
 
-        function tampil_data() {
+        function resetAndReload() {
+            offset = 0;
+            isFull = false;
+            $('#isi-tabel-anggota').empty();
+            loadMoreData();
+        }
+
+        function loadMoreData() {
+            isLoading = true;
+            $('#loader').removeClass('d-none');
+
             $.ajax({
-                url: 'get_data.php',
+                url: `get_data.php?limit=${limit}&offset=${offset}`,
                 type: 'GET',
+                dataType: 'json',
                 success: function(data) {
-                    $('#tampil-data').html(data);
+                    if (data.length > 0) {
+                        let html = '';
+                        data.forEach((row, index) => {
+                            let no = offset + index + 1;
+                            
+                            let badgeKelas = row.nama_kelas 
+                                ? `<span class="badge bg-primary">${row.nama_kelas}</span>` 
+                                : `<span class="text-muted">-</span>`;
+                            
+                            let badgeStatus = row.status === 'Aktif' 
+                                ? `<span class="badge bg-success">Aktif</span>` 
+                                : `<span class="badge bg-secondary">Tidak Aktif</span>`;
+
+                            html += `
+                                <tr>
+                                    <td class="text-center">${no}</td>
+                                    <td class="text-center">${row.id_anggota}</td>
+                                    <td class="fw-bold">${row.nama}</td>
+                                    <td>${row.alamat}</td>
+                                    <td>${row.telpon}</td>
+                                    <td>${row.email}</td>
+                                    <td class="text-center">${row.jenis_kelamin}</td>
+                                    <td class="text-center">${badgeKelas}</td>
+                                    <td class="text-center">${badgeStatus}</td>
+                                    <td class="text-center">
+                                        <a href="edit_data.php?id=${row.id_anggota}" class="btn btn-warning btn-sm">Edit</a>
+                                        <button type="button" class="btn btn-danger btn-sm" data-id="${row.id_anggota}" data-nama="${row.nama}">
+                                            Hapus
+                                        </button>
+                                    </td>
+                                </tr>`;
+                        });
+
+                        $('#isi-tabel-anggota').append(html);
+                        offset += limit;
+                    } else {
+                        isFull = true;
+                        if(offset > 0) {
+                            $('#isi-tabel-anggota').append('<tr><td colspan="10" class="text-center p-3 text-muted">Semua data telah dimuat.</td></tr>');
+                        } else {
+                            $('#isi-tabel-anggota').append('<tr><td colspan="10" class="text-center p-5">Data Masih Kosong</td></tr>');
+                        }
+                    }
+                    isLoading = false;
+                    $('#loader').addClass('d-none');
                 }
             });
         }

@@ -7,7 +7,6 @@ $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 
 $sql = "SELECT a.*, k.nama_kelas FROM anggota as a
         LEFT JOIN kelas as k ON a.id_kelas = k.id_kelas
-        GROUP BY a.id_anggota
         ORDER BY a.id_anggota ASC
         LIMIT $limit OFFSET $offset";
 
